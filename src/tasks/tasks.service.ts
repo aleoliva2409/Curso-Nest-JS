@@ -6,6 +6,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksRepository } from './task.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
+import { User } from '../auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -13,12 +14,15 @@ export class TasksService {
     @InjectRepository(TasksRepository) private tasksRepository: TasksRepository,
   ) {}
 
-  getTasks(filterDto: GetTaskFilterDto): Promise<Task[]> {
-    return this.tasksRepository.getTasks(filterDto)
+  getTasks(filterDto: GetTaskFilterDto, user: User): Promise<Task[]> {
+    return this.tasksRepository.getTasks(filterDto, user);
   }
-  
-  async getTaskById(id: string): Promise<Task> {
-    const taskFounded = await this.tasksRepository.findOne(id);
+
+  async getTaskById(id: string, user: User): Promise<Task> {
+    const taskFounded = await this.tasksRepository.findOne({ id, user });
+    // const taskFounded = await this.tasksRepository.findOne({
+    //   where: { id, user },
+    // }); // ? es la mismo pero con el where
 
     if (!taskFounded)
       throw new NotFoundException(`Task with ID ${id} not found`);
@@ -26,13 +30,14 @@ export class TasksService {
     return taskFounded;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const { title, description } = createTaskDto;
 
     const newTask = this.tasksRepository.create({
       title,
       description,
       status: TaskStatus.OPEN,
+      user,
     });
 
     await this.tasksRepository.save(newTask);
@@ -47,10 +52,11 @@ export class TasksService {
   async updateTaskStatus(
     id: string,
     updateTaskDto: UpdateTaskDto,
+    user: User,
   ): Promise<Task> {
     const { status } = updateTaskDto;
 
-    const task = await this.getTaskById(id);
+    const task = await this.getTaskById(id, user);
     task.status = status;
     await this.tasksRepository.save(task);
 
@@ -59,8 +65,11 @@ export class TasksService {
     return task;
   }
 
-  async deleteTaskById(id: string): Promise<void> {
-    const taskDeleted = await this.tasksRepository.delete(id);
+  async deleteTaskById(id: string, user: User): Promise<void> {
+    const taskDeleted = await this.tasksRepository.delete({ id, user });
+    // const taskDeleted = await this.tasksRepository.delete({
+    //   where: { id, user },
+    // });
 
     if (taskDeleted.affected === 0)
       throw new NotFoundException(`Task with ID ${id} not found`);
