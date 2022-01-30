@@ -3,13 +3,13 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { TaskStatus } from './task-status-enum';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTaskFilterDto } from './dto/get-task-filter.dto';
@@ -22,10 +22,19 @@ import { User } from '../auth/user.entity';
 @Controller('tasks')
 @UseGuards(AuthGuard())
 export class TasksController {
+  private logger = new Logger('TasksController');
   constructor(private tasksService: TasksService) {} // ? sino colocamos el private tenemos que declarar dentro del constructor e igualarlos a los que se van a usar dentro de la clase TasksController
 
   @Get()
-  getTasks(@Query() filterDto: GetTaskFilterDto, @GetUser() user: User): Promise<Task[]> {
+  getTasks(
+    @Query() filterDto: GetTaskFilterDto,
+    @GetUser() user: User,
+  ): Promise<Task[]> {
+    this.logger.verbose(
+      `User "${user.username}" retrieving all tasks. Filters: ${JSON.stringify(
+        filterDto,
+      )}`,
+    );
     return this.tasksService.getTasks(filterDto, user);
   }
 
@@ -39,6 +48,11 @@ export class TasksController {
     @Body() createTaskDto: CreateTaskDto,
     @GetUser() user: User,
   ): Promise<Task> {
+    this.logger.verbose(
+      `User "${user.username}" is creating new task. Data: ${JSON.stringify(
+        createTaskDto,
+      )}`,
+    );
     return this.tasksService.createTask(createTaskDto, user);
   }
 
@@ -46,13 +60,16 @@ export class TasksController {
   updateTaskStatus(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
-    @GetUser() user: User
+    @GetUser() user: User,
   ): Promise<Task> {
     return this.tasksService.updateTaskStatus(id, updateTaskDto, user);
   }
 
   @Delete(':id')
-  deleteTaskById(@Param('id') id: string, @GetUser() user: User): Promise<void> {
+  deleteTaskById(
+    @Param('id') id: string,
+    @GetUser() user: User,
+  ): Promise<void> {
     return this.tasksService.deleteTaskById(id, user);
   }
 }
