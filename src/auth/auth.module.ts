@@ -12,13 +12,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   imports: [
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    // JwtModule.register({
+    // JwtModule.register({ // ? sync way
     //   secret: 'secretoPrueba',
     //   signOptions: {
     //     expiresIn: 3600,
     //   },
     // }),
-    JwtModule.registerAsync({
+    JwtModule.registerAsync({ // ? async way with environment variables
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({

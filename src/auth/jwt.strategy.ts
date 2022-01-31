@@ -11,20 +11,20 @@ import { ConfigService } from '@nestjs/config';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     @InjectRepository(UserRepository) private userRepository: UserRepository,
-    private configService: ConfigService
+    private configService: ConfigService,
   ) {
     super({
       secretOrKey: configService.get('JWT_SECRET'),
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     });
   }
 
   async validate(payload: JwtPayload): Promise<User> {
     const { username } = payload;
-    const user: User = await this.userRepository.findOne({ username })
+    const user: User = await this.userRepository.findOne({ username });
 
-    if(!user) throw new UnauthorizedException()
+    if (!user) throw new UnauthorizedException();
 
-    return user
+    return user;
   }
 }

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TasksModule } from './tasks/tasks.module';
-import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configValidationSchema } from './config.schema';
@@ -9,11 +8,11 @@ import { configValidationSchema } from './config.schema';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['env.stage.dev'],
+      envFilePath: ['.env.stage.dev'],
       validationSchema: configValidationSchema
     }),
     TasksModule,
-    // TypeOrmModule.forRoot({
+    // TypeOrmModule.forRoot({ // ? sync way
     //   type: 'postgres',
     //   host: 'localhost',
     //   port: 5432,
@@ -23,7 +22,7 @@ import { configValidationSchema } from './config.schema';
     //   autoLoadEntities: true,
     //   synchronize: true,
     // }),
-    TypeOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({ // ? async way with environment variables
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
